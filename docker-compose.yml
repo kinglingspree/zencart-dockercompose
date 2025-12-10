@@ -15,8 +15,15 @@ services:
           echo 'Code initialization completed.';
         else
           echo 'Code already initialized, skipping...';
-        fi
+        fi;
+        sleep infinity
       "
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/zencart-code/.initialized"]
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 10s
     networks:
       - zencart-network
 
@@ -36,8 +43,10 @@ services:
         docker-php-entrypoint apache2-foreground
       "
     depends_on:
-      - init
-      - db
+      init:
+        condition: service_healthy
+      db:
+        condition: service_started
     networks:
       - zencart-network
     restart: unless-stopped
